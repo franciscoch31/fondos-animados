@@ -1,12 +1,26 @@
 # Taller de Fondos Animados
 
-Convierte una ilustración en un video en bucle para usar de fondo de pantalla
-en el celular. La ilustración no se redibuja: se anima la que tú le des.
+Convierte una ilustración estática en un video en bucle para usar de fondo de pantalla en el celular. **La ilustración no se redibuja: se anima la que tú le des.**
+
+**Stack:** Node.js · `@napi-rs/canvas` · ffmpeg (`ffmpeg-static`) · servidor HTTP propio sin framework · interfaz web en JavaScript puro
+
+![Muestra](muestra-ultra.png)
+
+---
+
+## Lo interesante técnicamente
+
+- **Un solo motor de dibujo corriendo en dos entornos.** El código de `src/` no importa ninguna librería de canvas: recibe una función `crearLienzo(w, h)`. En Node se le pasa `@napi-rs/canvas` y en el navegador `document.createElement`. Es literalmente el mismo código dibujando en los dos lados, así que **la vista previa es idéntica al MP4 final** — no una aproximación.
+
+- **Bucle perfecto, y verificable.** Todo se mueve en función de `fase` (0 a 1) con frecuencias **enteras**, y cada partícula recorre su camino un número exacto de veces por vuelta. Hay una prueba que dibuja el cuadro en fase 0 y en fase 1 y los compara píxel a píxel: los 22 efectos dan **0% de diferencia**.
+
+- **Banco de efectos desacoplado del motor.** Los efectos no están cableados: son entradas de un objeto `BANCO` en `src/efectos.js` que se prenden, apagan, reordenan y combinan desde la interfaz. Cada "estilo" es solo una lista de efectos con sus números. Agregar uno nuevo es una entrada más — aparece solo en la UI.
+
+- **Recorte de fondo sin halo.** Detecta automáticamente si la imagen trae fondo blanco o ya viene con atmósfera propia, y trata cada caso distinto. Los detalles feos (huecos encerrados, contorno que hay que restar, halo que se satura en ilustraciones de grupo) están documentados abajo.
 
 ## Cómo se usa
 
-Doble clic a **`Iniciar.bat`**. Se abre solo en el navegador. Deja la ventana
-negra abierta mientras la uses; para cerrar, Ctrl + C.
+Doble clic a **`Iniciar.bat`**. Se abre solo en el navegador. Deja la ventana negra abierta mientras la uses; para cerrar, Ctrl + C.
 
 La primera vez instala lo que hace falta (tarda unos minutos, sólo pasa una vez).
 
@@ -21,13 +35,7 @@ Opciones: `--ancho 1080` `--alto 2400` `--seg 6` `--fps 30`
 
 ## Por qué el navegador no hace el video
 
-El H.264 lo produce ffmpeg, que no existe en el navegador. Así que el navegador
-es la interfaz y la vista previa, y Node hace el MP4 por detrás.
-
-Para que la vista previa sea fiel, el motor (`src/`) corre en los dos lados: no
-importa una librería de canvas, recibe una función `crearLienzo(w,h)`. En Node
-le pasan `@napi-rs/canvas` y en el navegador `document.createElement`. Es el
-mismo código dibujando, así que lo que ves es lo que sale.
+El H.264 lo produce ffmpeg, que no existe en el navegador. Así que el navegador es la interfaz y la vista previa, y Node hace el MP4 por detrás.
 
 ## Las dos formas de tratar una imagen
 
@@ -36,29 +44,19 @@ mismo código dibujando, así que lo que ves es lo que sale.
 | `recorte` | La ilustración trae **fondo blanco** | Recorta la figura y le arma una escena atrás |
 | `lamina` | La ilustración **ya trae su atmósfera** | La usa completa y sólo le anima la luz encima |
 
-El servidor lo detecta solo mirando el marco de la imagen (`/api/detectar`),
-pero se puede cambiar a mano.
+El servidor lo detecta solo mirando el marco de la imagen (`/api/detectar`), pero se puede cambiar a mano.
 
 ## El banco de efectos
 
-Los efectos no están metidos en el motor: son piezas sueltas en
-`src/efectos.js` que se prenden, se apagan, se reordenan y se combinan desde la
-interfaz. Cada receta de `src/estilos.js` es sólo una lista de ellos con sus
-números.
+**Fondo** (antes de la figura) — estrellas, nebulosa, niebla, resplandor, rayos de luz, anillo de energía, charco de luz, rejilla en fuga, meteoros, relámpago de fondo.
 
-**Fondo** (antes de la figura) — estrellas, nebulosa, niebla, resplandor,
-rayos de luz, anillo de energía, charco de luz, rejilla en fuga, meteoros,
-relámpago de fondo.
-
-**Frente** (después de la figura) — ondas expansivas, chispas, ceniza, lluvia,
-órbitas, rayos eléctricos, contorno encendido, destello, líneas de escaneo.
+**Frente** (después de la figura) — ondas expansivas, chispas, ceniza, lluvia, órbitas, rayos eléctricos, contorno encendido, destello, líneas de escaneo.
 
 **Acabado** — viñeta, grano de película.
 
 **Aparte** — vibración, que no pinta nada: sacude la figura en el pico del pulso.
 
-Un efecto puede cambiar de capa desde la receta (`capa: "frente"`): el
-resplandor va detrás de una figura recortada, pero encima de una lámina.
+Un efecto puede cambiar de capa desde la receta (`capa: "frente"`): el resplandor va detrás de una figura recortada, pero encima de una lámina.
 
 ### Para agregar uno nuevo
 
@@ -78,45 +76,19 @@ miEfecto: {
 }
 ```
 
-Aparece solo en la lista de la interfaz. `c` trae `W, H, fase, p` (el pulso),
-`cuadro`, `esRecorte`, la caja de la figura (`fx, fy, fw, fh`), su `silueta` y
-`crearLienzo`.
-
-## Por qué el bucle no salta
-
-Todo se mueve en función de `fase` (0 a 1) con frecuencias **enteras**, y cada
-partícula recorre su camino un número exacto de veces por vuelta, con el brillo
-entrando y saliendo en `sen(pi*u)`. Así el cuadro que sigue al último es
-idéntico al primero.
-
-Hay una prueba de esto: se dibuja el cuadro en fase 0 y en fase 1 y se comparan
-píxel a píxel. Los 22 efectos dan 0%. Se salvan los rayos y la vibración, que
-se sortean con semilla derivada del número de cuadro porque parpadean a
-propósito.
+Aparece solo en la lista de la interfaz. `c` trae `W, H, fase, p` (el pulso), `cuadro`, `esRecorte`, la caja de la figura (`fx, fy, fw, fh`), su `silueta` y `crearLienzo`.
 
 ## Detalles que cuestan caro si se olvidan
 
-- **El halo se satura.** Se arma repitiendo la silueta en anillos y sumando con
-  `lighter`. En una figura sola da un contorno; en una ilustración de grupo la
-  dilatación cierra los huecos entre personajes y se vuelve un rectángulo
-  sólido. Por eso el ancho y la fuerza son parámetros y no constantes.
+- **El halo se satura.** Se arma repitiendo la silueta en anillos y sumando con `lighter`. En una figura sola da un contorno; en una ilustración de grupo la dilatación cierra los huecos entre personajes y se vuelve un rectángulo sólido. Por eso el ancho y la fuerza son parámetros y no constantes.
 
-- **El contorno hay que restarlo.** La silueta es una mancha sólida: correrla y
-  dibujarla encima tapa la figura entera. Para quedarse con el filo se dilata y
-  después se le resta la silueta original.
+- **El contorno hay que restarlo.** La silueta es una mancha sólida: correrla y dibujarla encima tapa la figura entera. Para quedarse con el filo se dilata y después se le resta la silueta original.
 
-- **El orden del azar es parte del resultado.** Las chispas se generan con
-  semilla fija; cambiar el orden en que se piden los números recorre la
-  secuencia y caen en otro lado. Se ve igual de bien, pero deja de reproducir
-  renders anteriores.
+- **El orden del azar es parte del resultado.** Las chispas se generan con semilla fija; cambiar el orden en que se piden los números recorre la secuencia y caen en otro lado. Se ve igual de bien, pero deja de reproducir renders anteriores.
 
-- **Los huecos encerrados del recorte.** La inundación entra desde los bordes y
-  no alcanza el fondo que quedó rodeado por el dibujo (entre la tela y el
-  brazo). Se borran aparte, pidiendo blanco casi puro **y** mancha grande, para
-  no comerse los brillos finos del pelo.
+- **Los huecos encerrados del recorte.** La inundación entra desde los bordes y no alcanza el fondo que quedó rodeado por el dibujo (entre la tela y el brazo). Se borran aparte, pidiendo blanco casi puro **y** mancha grande, para no comerse los brillos finos del pelo.
 
-- **La resolución de la fuente manda.** Una imagen de 352x452 estirada a
-  1080x2400 sale suave. El programa avisa cuando la fuente se queda corta.
+- **La resolución de la fuente manda.** Una imagen de 352x452 estirada a 1080x2400 sale suave. El programa avisa cuando la fuente se queda corta.
 
 ## Archivos
 
@@ -131,5 +103,13 @@ src/escena.js      arma la figura y ordena los efectos
 src/render.js      cuadros → ffmpeg
 src/video.js       la tubería a ffmpeg
 web/               la interfaz
-salidas/           los MP4 que vas haciendo
+salidas/           los MP4 que vas haciendo (fuera de git)
 ```
+
+## Proyecto hermano
+
+[`fondos-animados-android`](https://github.com/franciscoch31/fondos-animados-android) — la app de Android que toma estos MP4 y los pone de fondo de pantalla animado, sin pedir permisos.
+
+## Nota sobre las imágenes de muestra
+
+Los `muestra-*.png` son renders de prueba hechos a partir de ilustraciones de terceros, incluidos solo para mostrar el resultado del motor. El código es propio; esas imágenes no.
