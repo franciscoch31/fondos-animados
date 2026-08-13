@@ -1,0 +1,16 @@
+{
+  "name": "fondos-animados",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Convierte una ilustración en un fondo animado en bucle para celular.",
+  "main": "crear.js",
+  "scripts": {
+    "muestra": "node crear.js --muestra",
+    "goku": "node crear.js --img \"../../Downloads/ea8e6631aa270a5aa7f3035152976f0f.jpg\" --estilo ultra --salida \"Goku-UltraInstinto.mp4\""
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.60",
+    "ffmpeg-static": "^5.2.0"
+  }
+}

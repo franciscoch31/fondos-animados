@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller de Fondos Animados</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="barra">
+  <h1>Taller de <em>Fondos Animados</em></h1>
+  <p class="lema">Tu ilustración, en movimiento y en bucle, lista para el celular.</p>
+</header>
+
+<main class="taller">
+
+  <section class="panel" aria-label="Controles">
+
+    <div class="bloque">
+      <h2>1 · La imagen</h2>
+      <div id="soltar" class="soltar" tabindex="0" role="button"
+           aria-label="Elegir imagen: arrástrala aquí o presiona Enter">
+        <p class="soltar-titulo">Arrastra tu ilustración aquí</p>
+        <p class="soltar-nota">o haz clic para buscarla · JPG o PNG</p>
+        <input type="file" id="archivo" accept="image/*" hidden>
+      </div>
+      <p id="datosImagen" class="dato" hidden></p>
+      <p id="avisoImagen" class="aviso" hidden></p>
+    </div>
+
+    <div class="bloque">
+      <h2>2 · La receta de partida</h2>
+      <div class="fila">
+        <label for="estilo">Receta</label>
+        <select id="estilo"></select>
+      </div>
+      <p id="pistaEstilo" class="dato"></p>
+
+      <div class="fila">
+        <label for="modo">Tratamiento</label>
+        <select id="modo">
+          <option value="recorte">Recortar la figura del fondo blanco</option>
+          <option value="lamina">Usar la imagen completa</option>
+        </select>
+      </div>
+
+      <div class="fila" data-solo="recorte">
+        <label for="colocacion">Colocación</label>
+        <select id="colocacion">
+          <option value="auto">Automática</option>
+          <option value="centrada">Centrada</option>
+          <option value="abajo">Asentada abajo</option>
+        </select>
+      </div>
+
+      <div class="fila" data-solo="lamina">
+        <label for="encaje">Encaje</label>
+        <select id="encaje">
+          <option value="contener">Completa, rellenando alrededor</option>
+          <option value="cubrir">Tapar la pantalla, recortando</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bloque" data-solo="recorte">
+      <h2>3 · El aura de la figura</h2>
+      <div class="fila">
+        <label for="auraLejana">Color exterior</label>
+        <input type="color" id="auraLejana">
+      </div>
+      <div class="fila">
+        <label for="auraCercana">Color del borde</label>
+        <input type="color" id="auraCercana">
+      </div>
+      <div class="fila">
+        <label for="haloLejos">Ancho <span class="valor" id="vHaloLejos"></span></label>
+        <input type="range" id="haloLejos" min="5" max="120" step="1">
+      </div>
+      <div class="fila">
+        <label for="haloFuerza">Intensidad <span class="valor" id="vHaloFuerza"></span></label>
+        <input type="range" id="haloFuerza" min="1" max="30" step="1">
+      </div>
+      <p class="nota">Con varios personajes juntos, un aura ancha y fuerte rellena
+        los huecos entre ellos y se vuelve un bloque. Bájala si eso pasa.</p>
+    </div>
+
+    <div class="bloque">
+      <h2>4 · Efectos</h2>
+      <p class="dato">Se apilan de arriba hacia abajo. Prende, apaga, reordena y agrega los que quieras.</p>
+      <div id="efectos" class="efectos"></div>
+      <div class="agregar">
+        <select id="nuevoEfecto" aria-label="Efecto a agregar"></select>
+        <button type="button" id="btnAgregar" class="secundaria">Agregar</button>
+      </div>
+      <p id="pistaNuevo" class="dato"></p>
+    </div>
+
+    <div class="bloque">
+      <h2>5 · El fondo y el pulso</h2>
+      <div class="fila">
+        <label for="cielo0">Arriba</label>
+        <input type="color" id="cielo0">
+      </div>
+      <div class="fila">
+        <label for="cielo1">Al centro</label>
+        <input type="color" id="cielo1">
+      </div>
+      <div class="fila">
+        <label for="cielo2">Abajo</label>
+        <input type="color" id="cielo2">
+      </div>
+      <div class="fila">
+        <label for="tipoPulso">Ritmo</label>
+        <select id="tipoPulso">
+          <option value="fluido">Fluido, como energía</option>
+          <option value="latido">Latido de corazón</option>
+        </select>
+      </div>
+      <div class="fila" data-solo-pulso="fluido">
+        <label for="velocidad">Velocidad <span class="valor" id="vVelocidad"></span></label>
+        <input type="range" id="velocidad" min="1" max="6" step="1">
+      </div>
+      <p class="nota">El pulso es el latido que comparten todos los efectos:
+        de él dependen el brillo del aura, los rayos y el destello.</p>
+    </div>
+
+    <div class="bloque">
+      <h2>6 · El archivo</h2>
+      <div class="fila">
+        <label for="tamano">Tamaño</label>
+        <select id="tamano">
+          <option value="1080x2400">1080 × 2400 · celular alto</option>
+          <option value="1080x1920">1080 × 1920 · celular clásico</option>
+          <option value="720x1600">720 × 1600 · más ligero</option>
+          <option value="1080x1080">1080 × 1080 · cuadrado</option>
+        </select>
+      </div>
+      <div class="fila">
+        <label for="seg">Duración <span class="valor" id="vSeg"></span></label>
+        <input type="range" id="seg" min="3" max="12" step="1">
+      </div>
+      <div class="fila">
+        <label for="fps">Fluidez</label>
+        <select id="fps">
+          <option value="30">30 cuadros por segundo</option>
+          <option value="24">24 · más ligero</option>
+          <option value="60">60 · más suave y más pesado</option>
+        </select>
+      </div>
+      <div class="fila">
+        <label for="nombre">Nombre</label>
+        <input type="text" id="nombre" placeholder="Mi-fondo" maxlength="60">
+      </div>
+    </div>
+
+    <div class="acciones">
+      <button id="renderizar" class="principal" disabled>Renderizar MP4</button>
+      <button id="restablecer" class="secundaria">Volver a la receta original</button>
+    </div>
+    <div id="progreso" class="progreso" hidden>
+      <div class="barra-progreso"><span id="barraLlena"></span></div>
+      <p id="textoProgreso" class="dato"></p>
+    </div>
+
+  </section>
+
+  <section class="vista" aria-label="Vista previa">
+    <div class="celular">
+      <canvas id="previo" width="288" height="640"></canvas>
+      <div id="cargando" class="cargando" hidden>Preparando…</div>
+      <div id="vacio" class="vacio">
+        <p>Elige una imagen<br>para ver la vista previa</p>
+      </div>
+    </div>
+    <p class="dato centrado">Lo que ves aquí es el mismo motor que genera el MP4.</p>
+
+    <div class="hechos">
+      <h2>Fondos hechos</h2>
+      <ul id="listaSalidas" class="lista"></ul>
+    </div>
+  </section>
+
+</main>
+
+<script src="/src/estilos.js"></script>
+<script src="/src/efectos.js"></script>
+<script src="/src/recorte.js"></script>
+<script src="/src/escena.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
